@@ -3,6 +3,6 @@
 ################################################################################
 
 /pagSeguro/.vs
-/pagSeguro/pagSeguro.Api/bin/Debug/net6.0
+/pagSeguro/pagSeguro.Api/bin
 /pagSeguro/pagSeguro.Api/obj
 /pagSeguro/pagSeguro.Api/pagSeguro.Api.csproj.user
