@@ -9,7 +9,7 @@
     <p>Página de teste para Pagamentos via pagSeguro.</p>
 </div>
 
-<form>
+<form id="form">
 
     <h2>Valor do Pedido</h2>
 
@@ -17,7 +17,7 @@
         <tr>
             <td>
                 <label for="totalPrice">Valor Total</label>
-                <input type="number" id="totalPrice" />
+                <input type="number" id="totalPrice" value="50" />
             </td>
         </tr>
     </table>
@@ -132,7 +132,42 @@
 
     const apiUrl = 'https://localhost:7037';
 
-    document.addEventListener("DOMContentLoaded", () => {
+    const numberOfPayments = document.getElementById('numberOfPayments');
+    const cardNumber = document.getElementById('cardNumber');
+    const form = document.getElementById('form');
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+        saveSessionId();
+
+        saveSenderHash();
+    });
+
+    cardNumber.addEventListener('change', () => {
+
+        var cardNumberValue = cardNumber.value.replace(/ /g, '');
+
+        var parcelamentoMaximo = 12;
+
+        getBrand(cardNumberValue, parcelamentoMaximo);
+    });
+
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        createCardToken();
+    });
+
+    numberOfPayments.addEventListener('change', () => {
+
+        var selected = numberOfPayments.options[numberOfPayments.selectedIndex];
+
+        var selectedInstallment = selected.dataset.installment;
+
+        document.getElementById('installmentValue').value = selectedInstallment;
+    });
+
+    function saveSessionId() {
 
         var requestOptions = {
             method: 'POST',
@@ -147,18 +182,7 @@
                 PagSeguroDirectPayment.setSessionId(json.sessionId);
             })
             .catch(error => console.log('error', error));
-
-        saveSenderHash();
-    });
-
-    document.getElementById('cardNumber').addEventListener("onchange", () => {
-
-        var cardNumber = String($('#CardNumber').val().replace(/ /g, ''));
-
-        var parcelamentoMaximo = String($('#ParcelamentoMaximo').val());
-
-        getBrand(cardNumber, parcelamentoMaximo);
-    });
+    }
 
     function saveSenderHash() {
         var senderHash = PagSeguroDirectPayment.getSenderHash();
@@ -202,8 +226,7 @@
 
         esconderErro();
 
-        var orderTotal = $('#AmountValue').val()
-        orderTotal = orderTotal.replace(",", ".");
+        var orderTotal = document.getElementById('totalPrice').value;
 
         var productValue = parseFloat(orderTotal).toFixed(2);
 
@@ -215,6 +238,12 @@
             success: function (response) {
 
                 if (!response.error) {
+
+                    //remove todas as opções de parcelamento
+                    var i, L = numberOfPayments.options.length - 1;
+                    for (i = L; i >= 0; i--) {
+                        numberOfPayments.remove(i);
+                    }
 
                     var tam = parcelamentoMaximo;
                     if (tam > response.installments[creditCardBrandName].length)
@@ -229,17 +258,14 @@
 
                         var obj = {
                             Id: auxObj.quantity,
-                            texto: '' + auxObj.quantity + ' x ' + (auxObj.interestFree ? "Sem Juros" : "Com Juros") + ' de R$ ' + valorParcela + '. Total de R$ ' + valorTotal
-                            // '{1} X {2} de R${3}.Total: R${4}'
+                            texto: '' + auxObj.quantity + ' x ' + (auxObj.interestFree ? 'Sem Juros' : 'Com Juros') + ' de R$ ' + valorParcela + '. Total de R$ ' + valorTotal
                         };
 
                         var content = '<option value="' + obj.Id + '" data-installment="' + auxObj.installmentAmount + '"> ' + obj.texto + '</option>';
 
-                        $("#NumberOfPayments").append(content);
+                        //insere opção de parcelamento
+                        numberOfPayments.insertAdjacentHTML('beforeend', content);
                     };
-
-                    $('#trCreditCardNumberOfPayments').show();
-                    $('#trLabelCreditCardNumberOfPayments').show();
                 }
                 else {
                     exibirErro();
@@ -255,15 +281,18 @@
 
         esconderErro();
 
-        var cardNumberVal = $('#CardNumber').val().replace(/ /g, '');
-        var cvvVal = $('#CardCode').val().replace(/ /g, '');
-        var expirationMonthVal = $('#ExpireMonth').val();
-        var expirationYearVal = $('#ExpireYear').val();
+        var cardNumberVal = cardNumber.value.replace(/ /g, '');
+        var cvvVal = document.getElementById('cardCode').value.replace(/ /g, '');
 
-        if (cardNumberVal != "" &&
-            cvvVal != "" &&
-            expirationMonthVal != "" &&
-            expirationYearVal != "") {
+        var expiration = document.getElementById('cardExpiration').value;
+
+        var expirationMonthVal = expiration.substring(0, 2);
+        var expirationYearVal = '20' + expiration.substring(3, 5);
+
+        if (cardNumberVal != '' &&
+            cvvVal != '' &&
+            expirationMonthVal != '' &&
+            expirationYearVal != '') {
             PagSeguroDirectPayment.createCardToken({
                 cardNumber: cardNumberVal,
                 cvv: cvvVal,
@@ -273,7 +302,7 @@
 
                     var creditCardTokenVal = response.card.token;
 
-                    $('#CreditCardToken').val(creditCardTokenVal);
+                    document.getElementById('creditCardToken').value = creditCardTokenVal;
                 },
                 error: function (response) {
                     exibirErro();
@@ -282,5 +311,12 @@
         }
     }
 
+    function exibirErro() {
+
+    }
+
+    function esconderErro() {
+
+    }
 
 </script>
