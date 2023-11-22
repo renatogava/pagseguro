@@ -28,10 +28,7 @@ namespace pagSeguro.Api.Services
             {
                 var address = request.Customer.Address;
 
-                var shippingPrice = request.ShippingPrice;
                 var orderAmount = request.TotalPrice;
-
-                request.ShippingOptionRate = shippingPrice;
 
                 switch (request.PaymentMethodId)
                 {

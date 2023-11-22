@@ -218,7 +218,6 @@ namespace pagSeguro.Api.Integrations
                             }
                             else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                             {
-                                //pagSeguroBoletoResponse.Success = false;
                             }
                         }
                     }

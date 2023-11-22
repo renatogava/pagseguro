@@ -26,7 +26,16 @@ string conn = builder.Configuration.GetConnectionString("pagSeguroApiDb");
 builder.Services.AddDbContext<DataContext>(
     options => options.UseSqlServer(conn));
 
-builder.Services.AddCors();
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: MyAllowSpecificOrigins,
+                         policy =>
+                         {
+                             policy.WithOrigins("https://localhost:7204");
+                         });
+});
 
 var app = builder.Build();
 
@@ -40,6 +49,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+
+app.UseCors(MyAllowSpecificOrigins);
 
 app.MapControllers();
 

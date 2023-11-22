@@ -20,3 +20,6 @@ CREATE TABLE [dbo].[Setting] (
     CONSTRAINT [PK_Setting] PRIMARY KEY ([Id])
 );
 GO
+
+INSERT [dbo].[Setting] ([Name], [Value]) VALUES (N'PagSeguroEmail', N'<seu email aqui>')
+INSERT [dbo].[Setting] ([Name], [Value]) VALUES (N'PagSeguroToken', N'<seu token aqui>')
