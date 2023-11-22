@@ -1,0 +1,8 @@
+﻿################################################################################
+# Este arquivo .gitignore foi criado automaticamente pelo Microsoft(R) Visual Studio.
+################################################################################
+
+/pagSeguro/.vs
+/pagSeguro/pagSeguro.Api/bin/Debug/net6.0
+/pagSeguro/pagSeguro.Api/obj
+/pagSeguro/pagSeguro.Api/pagSeguro.Api.csproj.user
