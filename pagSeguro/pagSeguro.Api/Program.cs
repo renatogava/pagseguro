@@ -4,6 +4,7 @@ using pagSeguro.Api.Services;
 using pagSeguro.Api.Integrations;
 using Microsoft.AspNetCore.Authentication;
 using pagSeguro.Api.Authentication;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,7 +13,31 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.AddSecurityDefinition("Basic", new OpenApiSecurityScheme()
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "Basic",
+        In = ParameterLocation.Header,
+        Description = "Basic Authentication Header"
+    });
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme()
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Basic"
+                }
+            },
+            new string[] { "Basic" }
+        }
+    });
+});
 
 // Configure DI
 builder.Services.AddScoped<ISettingService, SettingService>();
