@@ -22,6 +22,100 @@
         </tr>
     </table>
 
+    <h2>Dados do Cliente</h2>
+    <table>
+
+        <tr>
+            <td>
+                <label for="holderBirthDate">Nome</label>
+                <input type="text" id="customerName" value="Renato de Freitas Gava">
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <label for="customerBirthDate">Data de Nascimento</label>
+                <input type="text" id="customerBirthDate" value="28/01/1984">
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <label for="customerCpf">CPF</label>
+                <input type="text" id="customerCpf" value="314.233.158-12">
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <label for="customerPhone">Telefone</label>
+                <input type="text" id="customerPhone" value="(11) 99535-1984">
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <label for="customerEmail">Email</label>
+                <input type="text" id="customerEmail" value="renatogava2@live.com">
+            </td>
+        </tr>
+
+    </table>
+
+    <h2>Endereço de Entrega</h2>
+    <table>
+
+        <tr>
+            <td>
+                <label for="zipPostalCode">CEP</label>
+                <input type="text" id="zipPostalCode" value="13214-799">
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <label for="street">Endereço</label>
+                <input type="text" id="street" value="R. das Cicas">
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <label for="streetNumber">Número</label>
+                <input type="text" id="streetNumber" value="766">
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <label for="complement">Complemento</label>
+                <input type="text" id="complement" value="">
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <label for="neighbourhood">Bairro</label>
+                <input type="text" id="neighbourhood" value="Corrupira">
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <label for="city">Cidade</label>
+                <input type="text" id="city" value="Jundiaí">
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label for="state">SP</label>
+                <input type="text" id="state" value="SP">
+            </td>
+        </tr>
+
+    </table>
+
+
     <h2>Dados do Cartão</h2>
     <table>
         <tr>
@@ -57,30 +151,6 @@
                 <label for="numberOfPayments">Número de Parcelas</label>
                 <select id="numberOfPayments">
                 </select>
-            </td>
-        </tr>
-    </table>
-
-    <h2>Dados do Titular do Cartão</h2>
-    <table>
-        <tr>
-            <td>
-                <label for="holderBirthDate">Data de Nascimento</label>
-                <input type="text" id="holderBirthDate">
-            </td>
-        </tr>
-
-        <tr>
-            <td>
-                <label for="holderCpf">CPF</label>
-                <input type="text" id="holderCpf">
-            </td>
-        </tr>
-
-        <tr>
-            <td>
-                <label for="holderCpf">Telefone</label>
-                <input type="text" id="holderPhone">
             </td>
         </tr>
     </table>
@@ -130,32 +200,57 @@
 
 <script>
 
+    //api
     const apiUrl = 'https://localhost:7037';
 
+    //campos
+    const form = document.getElementById('form');
+    const totalPrice = document.getElementById('totalPrice');
+
+    //credit card
+    const cardHolderName = document.getElementById('cardHolderName');
     const numberOfPayments = document.getElementById('numberOfPayments');
     const cardNumber = document.getElementById('cardNumber');
-    const form = document.getElementById('form');
+    const creditCardType = document.getElementById('creditCardType');
+    const cardExpiration = document.getElementById('cardExpiration');
+    const cardCode = document.getElementById('cardCode');
+
+    //campos cliente
+    const customerName = document.getElementById('customerName');
+    const customerEmail = document.getElementById('customerEmail');
+    const customerCpf = document.getElementById('customerCpf');
+    const customerPhone = document.getElementById('customerPhone');
+    const customerBirthDate = document.getElementById('customerBirthDate');
+
+    //campos endereço
+    const shippingZipPostalCode = document.getElementById('zipPostalCode');
+    const shippingStreet = document.getElementById('street');
+    const shippingNumber = document.getElementById('streetNumber');
+    const shippingComplement = document.getElementById('complement');
+    const shippingNeighbourhood = document.getElementById('neighbourhood');
+    const shippingCity = document.getElementById('city');
+    const shippingState = document.getElementById('state');
+
+    //campos auxiliares
+    const sessionId = document.getElementById('sessionId');
+    const senderHash = document.getElementById('senderHash');
+    const installmentValue = document.getElementById('installmentValue');
+    const creditCardToken = document.getElementById('creditCardToken');
 
     document.addEventListener('DOMContentLoaded', () => {
 
-        saveSessionId();
-
         saveSenderHash();
+
+        saveSessionId();
     });
 
     cardNumber.addEventListener('change', () => {
 
         var cardNumberValue = cardNumber.value.replace(/ /g, '');
 
-        var parcelamentoMaximo = 12;
+        esconderErro();
 
-        getBrand(cardNumberValue, parcelamentoMaximo);
-    });
-
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-
-        createCardToken();
+        getBrand(cardNumberValue);
     });
 
     numberOfPayments.addEventListener('change', () => {
@@ -164,53 +259,64 @@
 
         var selectedInstallment = selected.dataset.installment;
 
-        document.getElementById('installmentValue').value = selectedInstallment;
+        installmentValue.value = selectedInstallment;
+    });
+
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        esconderErro();
+
+        createCardToken();
     });
 
     function saveSessionId() {
 
+        var headers = new Headers();
+        headers.append("Authorization", "Basic ZWRpdG9yYWNvbnRyYWNvcnJlbnRlOmhPWHk4JXdhWGRUKg==");
+
         var requestOptions = {
             method: 'POST',
-            body: '',
-            redirect: 'follow'
+            headers: headers,
+            body: ''
         };
 
         fetch(apiUrl + "/payments/getsessionid", requestOptions)
             .then(response => response.json())
             .then(json => {
-                document.getElementById('sessionId').value = json.sessionId;
+                sessionId.value = json.sessionId;
                 PagSeguroDirectPayment.setSessionId(json.sessionId);
             })
             .catch(error => console.log('error', error));
     }
 
     function saveSenderHash() {
-        var senderHash = PagSeguroDirectPayment.getSenderHash();
+        var senderHashValue = PagSeguroDirectPayment.getSenderHash();
 
-        if (senderHash == null || senderHash == '') {
+        if (senderHashValue == null || senderHashValue == '') {
             setTimeout(function () {
                 saveSenderHash();
             }, 2000);
         }
         else {
-            document.querySelector('#senderHash').value = senderHash;
+            senderHash.value = senderHashValue;
         }
     }
 
-    function getBrand(cardNumber, parcelamentoMaximo) {
+    function getBrand(cardNumberValue) {
 
         PagSeguroDirectPayment.getBrand({
 
-            cardBin: cardNumber,
+            cardBin: cardNumberValue,
             success: function (response) {
 
                 var creditCardBrandName = response.brand.name;
 
                 if (creditCardBrandName != '') {
 
-                    document.getElementById('creditCardType').value = creditCardBrandName;
+                    creditCardType.value = creditCardBrandName;
 
-                    getInstallments(creditCardBrandName, parcelamentoMaximo);
+                    getInstallments(creditCardBrandName);
                 }
                 else {
                     exibirErro();
@@ -222,18 +328,14 @@
         });
     }
 
-    function getInstallments(creditCardBrandName, parcelamentoMaximo) {
+    function getInstallments(creditCardBrandName) {
 
-        esconderErro();
-
-        var orderTotal = document.getElementById('totalPrice').value;
-
-        var productValue = parseFloat(orderTotal).toFixed(2);
+        var totalPriceValue = parseFloat(totalPrice.value).toFixed(2);
 
         PagSeguroDirectPayment.getInstallments({
 
-            amount: productValue,
-            maxInstallmentNoInterest: 12, // MÁXIMO DE PARCELAS SEM JUROS!
+            amount: totalPriceValue,
+            maxInstallmentNoInterest: 12, // máximo de parcelas sem juros
             brand: creditCardBrandName,
             success: function (response) {
 
@@ -245,7 +347,10 @@
                         numberOfPayments.remove(i);
                     }
 
-                    var tam = parcelamentoMaximo;
+                    //valor da parcela por equanto é o valor total
+                    installmentValue.value = totalPriceValue;
+
+                    var tam = 12;
                     if (tam > response.installments[creditCardBrandName].length)
                         tam = response.installments[creditCardBrandName].length;
 
@@ -258,7 +363,7 @@
 
                         var obj = {
                             Id: auxObj.quantity,
-                            texto: '' + auxObj.quantity + ' x ' + (auxObj.interestFree ? 'Sem Juros' : 'Com Juros') + ' de R$ ' + valorParcela + '. Total de R$ ' + valorTotal
+                            texto: '' + auxObj.quantity + 'x ' + (auxObj.interestFree ? 'Sem Juros' : 'Com Juros') + ' de R$ ' + valorParcela + '. Total de R$ ' + valorTotal
                         };
 
                         var content = '<option value="' + obj.Id + '" data-installment="' + auxObj.installmentAmount + '"> ' + obj.texto + '</option>';
@@ -279,12 +384,10 @@
 
     function createCardToken() {
 
-        esconderErro();
-
         var cardNumberVal = cardNumber.value.replace(/ /g, '');
-        var cvvVal = document.getElementById('cardCode').value.replace(/ /g, '');
+        var cvvVal = cardCode.value.replace(/ /g, '');
 
-        var expiration = document.getElementById('cardExpiration').value;
+        var expiration = cardExpiration.value;
 
         var expirationMonthVal = expiration.substring(0, 2);
         var expirationYearVal = '20' + expiration.substring(3, 5);
@@ -302,13 +405,68 @@
 
                     var creditCardTokenVal = response.card.token;
 
-                    document.getElementById('creditCardToken').value = creditCardTokenVal;
+                    creditCardToken.value = creditCardTokenVal;
+
+                    processCreditCardPayment();
                 },
                 error: function (response) {
                     exibirErro();
                 }
             });
         }
+    }
+
+    function processCreditCardPayment() {
+
+        var body = JSON.stringify({
+            "customer": {
+                "name": customerName.value,
+                "email": customerEmail.value,
+                "cpf": customerCpf.value,
+                "phone": customerPhone.value,
+                "birthDate": customerBirthDate.value,
+                "shippingaddress": {
+                    "zipPostalCode": shippingZipPostalCode.value,
+                    "street": shippingStreet.value,
+                    "number": shippingNumber.value,
+                    "complement": shippingComplement.value,
+                    "neighbourhood": shippingNeighbourhood.value,
+                    "city": shippingCity.value,
+                    "state": shippingState.value
+                },
+                "billingaddress": null
+            },
+            "creditCardInfo": {
+                "holderName": cardHolderName.value,
+                "creditCardToken": creditCardToken.value,
+                "numberOfPayments": numberOfPayments.value,
+                "installmentValue": installmentValue.value
+            },
+            "amount": totalPrice.value,
+            "senderHash": senderHash.value
+        });
+
+        var headers = new Headers();
+        headers.append('Content-Type', 'application/json');
+        headers.append("Authorization", "Basic ZWRpdG9yYWNvbnRyYWNvcnJlbnRlOmhPWHk4JXdhWGRUKg==");
+
+        var requestOptions = {
+            method: 'POST',
+            headers: headers,
+            body: body
+        };
+
+        fetch(apiUrl + '/payments/creditcard', requestOptions)
+            .then(response => response.json())
+            .then(json => {
+                if (json.succeeded) {
+                    alert('Pagamento realizado com sucesso');
+                }
+                else {
+                    alert(json.errorMessage);
+                }
+            })
+            .catch(error => console.log('error', error));
     }
 
     function exibirErro() {

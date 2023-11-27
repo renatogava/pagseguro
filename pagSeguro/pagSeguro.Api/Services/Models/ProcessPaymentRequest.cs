@@ -21,13 +21,19 @@ namespace pagSeguro.Api.Services.Models
         public string HolderCodeArea { get; set; }
         public string HolderPhone { get; set; }
         public string CreditCardToken { get; set; }
+        public decimal InstallmentValue { get; set; }
     }
 
     public class Customer
     {
         public string Email { get; set; }
-
-        public Address Address { get; set; }
+        public string CodeArea { get; set; }
+        public string Phone { get; set; }
+        public string BirthDate { get; set; }
+        public string Name { get; set; }
+        public string CPF { get; set; }
+        public Address ShippingAddress { get; set; }
+        public Address BillingAddress { get; set; }
     }
 
     public class Address

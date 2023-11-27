@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using pagSeguro.Api.Helpers;
 using pagSeguro.Api.Services;
 using pagSeguro.Api.Integrations;
+using Microsoft.AspNetCore.Authentication;
+using pagSeguro.Api.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,18 +35,20 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: MyAllowSpecificOrigins,
                          policy =>
                          {
-                             policy.WithOrigins("https://localhost:7204");
+                             policy.WithOrigins("https://localhost:7204", "https://www.editoracontracorrente.com.br");
+                             policy.AllowAnyHeader();
                          });
 });
+
+builder.Services.AddAuthentication()
+    .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>(
+    "Basic", null);
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 

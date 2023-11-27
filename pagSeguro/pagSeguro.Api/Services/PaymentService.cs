@@ -26,7 +26,7 @@ namespace pagSeguro.Api.Services
 
             if (customer != null)
             {
-                var address = request.Customer.Address;
+                var shippingAddress = request.Customer.ShippingAddress;
 
                 var orderAmount = request.TotalPrice;
 
@@ -36,7 +36,7 @@ namespace pagSeguro.Api.Services
 
                         var transactionRequest = new PagSeguroTransactionRequest();
 
-                        if (customer == null || address == null)
+                        if (customer == null || shippingAddress == null)
                         {
                             response.Succeeded = false;
                             response.ErrorMessage = "Informações do Pagamento Inválida";
@@ -47,16 +47,14 @@ namespace pagSeguro.Api.Services
 
                         transactionRequest.Reference = Guid.NewGuid().ToString();
 
-                        var description = _settingService.GetByName("PagSeguro.Description");
-                        transactionRequest.ItemDescription1 = !string.IsNullOrEmpty(description) ? description : "Compra Produto na Farmácia";
+                        transactionRequest.ItemDescription1 = "Compra Produto no Site";
                         transactionRequest.ItemQuantity1 = "1";
                         transactionRequest.ItemAmount1 = DecimalFormat(orderAmount);
                         var installments = request.CreditCard.NumberOfPayments;
 
                         if (installments > 1)
                         {
-                            var installmentValue = orderAmount / installments;
-                            transactionRequest.InstallmentValue = DecimalFormat(installmentValue);
+                            transactionRequest.InstallmentValue = DecimalFormat(request.CreditCard.InstallmentValue);
                             transactionRequest.InstallmentQuantity = installments.ToString();
                             transactionRequest.NoInterestInstallmentQuantity = "12";
                         }
@@ -71,13 +69,13 @@ namespace pagSeguro.Api.Services
                         transactionRequest.NotificationURL = urlNotificationPagSeguro;
 
                         //ShippingAddress
-                        transactionRequest.ShippingAddressStreet = address.Street;
-                        transactionRequest.ShippingAddressNumber = address.Number;
-                        transactionRequest.ShippingAddressComplement = address.Complement;
-                        transactionRequest.ShippingAddressDistrict = address.Neighbourhood;
-                        transactionRequest.ShippingAddressCity = address.City;
-                        transactionRequest.ShippingAddressPostalCode = address.ZipPostalCode;
-                        transactionRequest.ShippingAddressState = address.State;
+                        transactionRequest.ShippingAddressStreet = shippingAddress.Street;
+                        transactionRequest.ShippingAddressNumber = shippingAddress.Number;
+                        transactionRequest.ShippingAddressComplement = shippingAddress.Complement;
+                        transactionRequest.ShippingAddressDistrict = shippingAddress.Neighbourhood;
+                        transactionRequest.ShippingAddressCity = shippingAddress.City;
+                        transactionRequest.ShippingAddressPostalCode = shippingAddress.ZipPostalCode;
+                        transactionRequest.ShippingAddressState = shippingAddress.State;
                         transactionRequest.ShippingAddressCountry = "BRL";
                         transactionRequest.ShippingCost = "0.00";
                         transactionRequest.ShippingType = "1";
@@ -89,14 +87,16 @@ namespace pagSeguro.Api.Services
                         transactionRequest.CreditCardHolderPhone = request.CreditCard.HolderPhone;
                         transactionRequest.CreditCardHolderBirthDate = request.CreditCard.HolderBirthDate;
 
+                        var billingAddress = (request.Customer.BillingAddress == null) ? request.Customer.ShippingAddress : request.Customer.BillingAddress;
+
                         //BillingAddress
-                        transactionRequest.BillingAddressStreet = address.Street;
-                        transactionRequest.BillingAddressNumber = address.Number;
-                        transactionRequest.BillingAddressComplement = address.Complement;
-                        transactionRequest.BillingAddressDistrict = address.Neighbourhood;
-                        transactionRequest.BillingAddressCity = address.City;
-                        transactionRequest.BillingAddressPostalCode = address.ZipPostalCode;
-                        transactionRequest.BillingAddressState = address.State;
+                        transactionRequest.BillingAddressStreet = billingAddress.Street;
+                        transactionRequest.BillingAddressNumber = billingAddress.Number;
+                        transactionRequest.BillingAddressComplement = billingAddress.Complement;
+                        transactionRequest.BillingAddressDistrict = billingAddress.Neighbourhood;
+                        transactionRequest.BillingAddressCity = billingAddress.City;
+                        transactionRequest.BillingAddressPostalCode = billingAddress.ZipPostalCode;
+                        transactionRequest.BillingAddressState = billingAddress.State;
                         transactionRequest.BillingAddressCountry = "BRL";
 
                         //hash and token
@@ -104,10 +104,10 @@ namespace pagSeguro.Api.Services
                         transactionRequest.CreditCardToken = request.CreditCard.CreditCardToken;
 
                         //Sender 
-                        transactionRequest.SenderName = request.CreditCard.HolderName;
-                        transactionRequest.SenderAreaCode = request.CreditCard.HolderCodeArea;
-                        transactionRequest.SenderCPF = request.CreditCard.HolderCpf;
-                        transactionRequest.SenderPhone = request.CreditCard.HolderPhone;
+                        transactionRequest.SenderName = customer.Name;
+                        transactionRequest.SenderAreaCode = customer.CodeArea;
+                        transactionRequest.SenderPhone = customer.Phone;
+                        transactionRequest.SenderCPF = customer.CPF;
                         transactionRequest.SenderEmail = customer.Email;
 
                         var transactionResponse = await _pagSeguroService.CreatePayment(transactionRequest);
@@ -119,8 +119,8 @@ namespace pagSeguro.Api.Services
                                 case (int)TransactionStatus.Paid:
                                 case (int)TransactionStatus.Available:
                                     {
-                                        //ProcessOrder(request, response, customer, shippingPrice, subTotalDiscount,
-                                        //    orderAmount, address, shoppingcarts, transactionResponse);
+                                        response.Succeeded = true;
+
                                         break;
                                     }
 
@@ -147,8 +147,7 @@ namespace pagSeguro.Api.Services
                                         if (transactionResponse.Transaction.Status == (int)TransactionStatus.Paid ||
                                         transactionResponse.Transaction.Status == (int)TransactionStatus.Available)
                                         {
-                                            //ProcessOrder(request, response, customer, shippingPrice, subTotalDiscount,
-                                            //    orderAmount, address, shoppingcarts, transactionResponse);
+                                            response.Succeeded = true;
                                         }
                                         else if (transactionStatus == (int)TransactionStatus.WaitingPayment ||
                                             transactionStatus == (int)TransactionStatus.InAnalysis)

@@ -313,6 +313,7 @@ namespace pagSeguro.Api.Integrations
                     }
                 }
             }
+
             return response;
         }
 
@@ -351,6 +352,7 @@ namespace pagSeguro.Api.Integrations
                     }
                 }
             }
+
             return response;
         }
     }

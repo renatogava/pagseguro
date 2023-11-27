@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using pagSeguro.Api.Authentication;
 using pagSeguro.Api.Enums;
 using pagSeguro.Api.Integrations;
 using pagSeguro.Api.Models;
@@ -25,6 +26,7 @@ namespace pagSeguro.Api.Controllers
         }
 
         [HttpPost("creditcard")]
+        [BasicAuthentication]
         public async Task<IActionResult> CreditCard(CreditCardRequest request)
         {
             try
@@ -34,16 +36,10 @@ namespace pagSeguro.Api.Controllers
                 var processPaymentResponse = await _paymentService.ProcessPayment(processPaymentRequest);
 
                 var response = new CreditCardResponse();
+                response.succeeded = processPaymentResponse.Succeeded;
+                response.errorMessage = processPaymentResponse.ErrorMessage;
 
-                if (processPaymentResponse != null && string.IsNullOrEmpty(processPaymentResponse.ErrorMessage))
-                {
-
-                    return Ok(response);
-                }
-                else
-                {
-                    return UnprocessableEntity(response);
-                }
+                return Ok(response);
             }
             catch (System.Exception ex)
             {
@@ -53,6 +49,7 @@ namespace pagSeguro.Api.Controllers
         }
 
         [HttpPost("getsessionid")]
+        [BasicAuthentication]
         public async Task<IActionResult> GetSessionId()
         {
             try
@@ -85,24 +82,47 @@ namespace pagSeguro.Api.Controllers
             processPaymentRequest.PaymentMethodId = (int)PaymentMethod.CartaoCredito;
             processPaymentRequest.Customer = new Services.Models.Customer();
             processPaymentRequest.Customer.Email = request.customer.email;
-            processPaymentRequest.Customer.Address = new Services.Models.Address
+            processPaymentRequest.Customer.CodeArea = GetCodeArea(request.customer.phone);
+            processPaymentRequest.Customer.Phone = GetPhone(request.customer.phone);
+            processPaymentRequest.Customer.BirthDate = request.customer.birthDate;
+            processPaymentRequest.Customer.Name = request.customer.name;
+            processPaymentRequest.Customer.CPF = FormatCpf(request.customer.cpf);
+
+            processPaymentRequest.Customer.ShippingAddress = new Services.Models.Address
             {
-                Street = request.customer.address.street,
-                City = request.customer.address.city,
-                Complement = request.customer.address.complement,
-                Neighbourhood = request.customer.address.neighbourhood,
-                Number = request.customer.address.number,
-                State = request.customer.address.state,
-                ZipPostalCode = request.customer.address.zipPostalCode
+                Street = request.customer.shippingaddress.street,
+                City = request.customer.shippingaddress.city,
+                Complement = request.customer.shippingaddress.complement,
+                Neighbourhood = request.customer.shippingaddress.neighbourhood,
+                Number = request.customer.shippingaddress.number,
+                State = request.customer.shippingaddress.state,
+                ZipPostalCode = FormatPostalCode(request.customer.shippingaddress.zipPostalCode)
             };
+
+            if (request.customer.billingaddress != null)
+            {
+                processPaymentRequest.Customer.BillingAddress = new Services.Models.Address
+                {
+                    Street = request.customer.billingaddress.street,
+                    City = request.customer.billingaddress.city,
+                    Complement = request.customer.billingaddress.complement,
+                    Neighbourhood = request.customer.billingaddress.neighbourhood,
+                    Number = request.customer.billingaddress.number,
+                    State = request.customer.billingaddress.state,
+                    ZipPostalCode = FormatPostalCode(request.customer.billingaddress.zipPostalCode)
+                };
+            }
+
+            processPaymentRequest.CreditCard = new CreditCard();
             processPaymentRequest.CreditCard.CreditCardToken = request.creditCardInfo.creditCardToken;
-            processPaymentRequest.CreditCard.HolderCpf = request.creditCardInfo.holderCpf;
-            processPaymentRequest.CreditCard.HolderCodeArea = GetCodeArea(request.creditCardInfo.holderPhone);
-            processPaymentRequest.CreditCard.HolderPhone = GetPhone(request.creditCardInfo.holderPhone);
-            processPaymentRequest.CreditCard.HolderBirthDate = request.creditCardInfo.holderBirthDate;
+            processPaymentRequest.CreditCard.HolderCpf = FormatCpf(request.customer.cpf);
+            processPaymentRequest.CreditCard.HolderCodeArea = GetCodeArea(request.customer.phone);
+            processPaymentRequest.CreditCard.HolderPhone = GetPhone(request.customer.phone);
+            processPaymentRequest.CreditCard.HolderBirthDate = request.customer.birthDate;
             processPaymentRequest.CreditCard.HolderName = request.creditCardInfo.holderName;
 
             processPaymentRequest.CreditCard.NumberOfPayments = request.creditCardInfo.numberOfPayments;
+            processPaymentRequest.CreditCard.InstallmentValue = request.creditCardInfo.installmentValue;
 
             processPaymentRequest.TotalPrice = request.amount;
             processPaymentRequest.SenderHash = request.senderHash;
@@ -110,14 +130,32 @@ namespace pagSeguro.Api.Controllers
             return processPaymentRequest;
         }
 
+        private string FormatPostalCode(string zipPostalCode)
+        {
+            return zipPostalCode.Replace("-", "").Replace(" ", "");
+        }
+
+        private string FormatCpf(string cpf)
+        {
+            return cpf.Replace(".", "").Replace("-", "").Replace(" ", "");
+        }
+
         private string GetPhone(string phone)
         {
+            phone = phone.Replace("(", "").Replace(")", "").Replace("-", "").Replace(" ", "");
+
+            phone = phone.Substring(2, phone.Length - 2);
+
             return phone;
         }
 
         private string GetCodeArea(string phone)
         {
-            return phone;
+            phone = phone.Replace("(", "").Replace(")", "").Replace("-", "").Replace(" ", "");
+
+            var code = phone.Substring(0, 2);
+
+            return code;
         }
 
     }

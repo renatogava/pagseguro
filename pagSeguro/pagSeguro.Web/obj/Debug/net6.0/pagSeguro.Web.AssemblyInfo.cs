@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("pagSeguro.Web")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b553e72e884c1d593531247b03e437d0078bab11")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
 [assembly: System.Reflection.AssemblyProductAttribute("pagSeguro.Web")]
 [assembly: System.Reflection.AssemblyTitleAttribute("pagSeguro.Web")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -1,4 +1,6 @@
-﻿namespace pagSeguro.Api.Models
+﻿using Newtonsoft.Json;
+
+namespace pagSeguro.Api.Models
 {
     public class CreditCardRequest
     {
@@ -15,17 +17,22 @@
     {
         public string creditCardToken { get; set; }
         public string holderName { get; set; }
-        public string holderCpf { get; set; }
-        public string holderPhone { get; set; }
-        public string holderBirthDate { get; set; }
         public int numberOfPayments { get; set; }
+        public decimal installmentValue { get; set; }
     }
 
     public class Customer
     {
         public string email { get; set; }
+        public string name { get; set; }
+        public string cpf { get; set; }
+        public string phone { get; set; }
+        public string birthDate { get; set; }
+        public Address shippingaddress { get; set; }
 
-        public Address address { get; set; }
+        [JsonProperty(Required = Required.Default)]
+        public Address? billingaddress { get; set; }
+
     }
 
     public class Address
