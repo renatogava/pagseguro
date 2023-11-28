@@ -29,9 +29,7 @@ namespace pagSeguro.Api.Models
         public string phone { get; set; }
         public string birthDate { get; set; }
         public Address shippingaddress { get; set; }
-
-        [JsonProperty(Required = Required.Default)]
-        public Address? billingaddress { get; set; }
+        public Address billingaddress { get; set; }
 
     }
 

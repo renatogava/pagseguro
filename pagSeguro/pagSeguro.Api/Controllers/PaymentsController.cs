@@ -153,19 +153,16 @@ namespace pagSeguro.Api.Controllers
                 ZipPostalCode = FormatPostalCode(request.customer.shippingaddress.zipPostalCode)
             };
 
-            if (request.customer.billingaddress != null)
+            processPaymentRequest.Customer.BillingAddress = new Services.Models.Address
             {
-                processPaymentRequest.Customer.BillingAddress = new Services.Models.Address
-                {
-                    Street = request.customer.billingaddress.street,
-                    City = request.customer.billingaddress.city,
-                    Complement = request.customer.billingaddress.complement,
-                    Neighbourhood = request.customer.billingaddress.neighbourhood,
-                    Number = request.customer.billingaddress.number,
-                    State = request.customer.billingaddress.state,
-                    ZipPostalCode = FormatPostalCode(request.customer.billingaddress.zipPostalCode)
-                };
-            }
+                Street = request.customer.billingaddress.street,
+                City = request.customer.billingaddress.city,
+                Complement = request.customer.billingaddress.complement,
+                Neighbourhood = request.customer.billingaddress.neighbourhood,
+                Number = request.customer.billingaddress.number,
+                State = request.customer.billingaddress.state,
+                ZipPostalCode = FormatPostalCode(request.customer.billingaddress.zipPostalCode)
+            };
 
             processPaymentRequest.CreditCard = new CreditCard
             {
