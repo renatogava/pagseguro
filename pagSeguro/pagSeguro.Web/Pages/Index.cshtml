@@ -193,18 +193,26 @@
 
     </table>
 
-    <input type="submit" value="Pagar" />
+    <input type="button" id="creditCardButton" value="Pagar Cartão de Crédito" />
+
+    <input type="button" id="boletoButton" value="Pagar Boleto" />
+
 </form>
 
 <script src="https://stc.pagseguro.uol.com.br/pagseguro/api/v2/checkout/pagseguro.directpayment.js"></script>
 
 <script>
 
-    //api
-    const apiUrl = 'http://pagseguro.ambientesai9.com.br';
+    //api (prod)
+    // const apiUrl = 'https://contracorrenteapi.ambientesai9.com.br';
+
+    //api (dev)
+    const apiUrl = 'https://localhost:7037';
 
     //campos
-    const form = document.getElementById('form');
+    const creditCardButton = document.getElementById('creditCardButton');
+    const boletoButton = document.getElementById('boletoButton');
+
     const totalPrice = document.getElementById('totalPrice');
 
     //credit card
@@ -262,12 +270,18 @@
         installmentValue.value = selectedInstallment;
     });
 
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
+    creditCardButton.addEventListener('click', (e) => {
 
         esconderErro();
 
         createCardToken();
+    });
+
+    boletoButton.addEventListener('click', (e) => {
+
+        esconderErro();
+
+        processBoletoPayment();
     });
 
     function saveSessionId() {
@@ -323,7 +337,7 @@
                 }
             },
             error: function (response) {
-                exibirErro();
+                console.log(response);
             }
         });
     }
@@ -461,6 +475,52 @@
             .then(json => {
                 if (json.succeeded) {
                     alert('Pagamento realizado com sucesso');
+                }
+                else {
+                    alert(json.errorMessage);
+                }
+            })
+            .catch(error => console.log('error', error));
+    }
+
+    function processBoletoPayment() {
+        var body = JSON.stringify({
+            "customer": {
+                "name": customerName.value,
+                "email": customerEmail.value,
+                "cpf": customerCpf.value,
+                "phone": customerPhone.value,
+                "birthDate": customerBirthDate.value,
+                "shippingaddress": {
+                    "zipPostalCode": shippingZipPostalCode.value,
+                    "street": shippingStreet.value,
+                    "number": shippingNumber.value,
+                    "complement": shippingComplement.value,
+                    "neighbourhood": shippingNeighbourhood.value,
+                    "city": shippingCity.value,
+                    "state": shippingState.value
+                }
+            },
+            "amount": totalPrice.value,
+            "senderHash": senderHash.value
+        });
+
+        var headers = new Headers();
+        headers.append('Content-Type', 'application/json');
+        headers.append("Authorization", "Basic ZWRpdG9yYWNvbnRyYWNvcnJlbnRlOmhPWHk4JXdhWGRUKg==");
+
+        var requestOptions = {
+            method: 'POST',
+            headers: headers,
+            body: body
+        };
+
+        fetch(apiUrl + '/payments/boleto', requestOptions)
+            .then(response => response.json())
+            .then(json => {
+                if (json.succeeded) {
+                    alert('Pagamento realizado com sucesso');
+                    window.open(json.boletourl, '_blank');
                 }
                 else {
                     alert(json.errorMessage);

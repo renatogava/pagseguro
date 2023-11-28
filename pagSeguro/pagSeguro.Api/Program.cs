@@ -60,7 +60,9 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: MyAllowSpecificOrigins,
                          policy =>
                          {
-                             policy.WithOrigins("https://localhost:7204", "https://www.editoracontracorrente.com.br");
+                             policy.WithOrigins("https://localhost:7204", 
+                                 "https://www.editoracontracorrente.com.br",
+                                 "https://contracorrente-ecomm.webflow.io");
                              policy.AllowAnyHeader();
                          });
 });

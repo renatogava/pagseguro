@@ -5,5 +5,7 @@ namespace pagSeguro.Api.Services
     public interface IPaymentService
     {
         Task<ProcessPaymentResponse> ProcessPayment(ProcessPaymentRequest request);
+
+        Task<CheckStatusResponse> CheckStatus(CheckStatusRequest request);
     }
 }

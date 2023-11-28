@@ -31,13 +31,15 @@ namespace pagSeguro.Api.Controllers
         {
             try
             {
-                var processPaymentRequest = BuildProcessPaymentRequest(request);
+                var processPaymentRequest = BuildProcessPaymentRequestCartaoCredito(request);
 
                 var processPaymentResponse = await _paymentService.ProcessPayment(processPaymentRequest);
 
                 var response = new CreditCardResponse();
                 response.succeeded = processPaymentResponse.Succeeded;
                 response.errorMessage = processPaymentResponse.ErrorMessage;
+                response.transactionid = processPaymentResponse.CreditCardInfo.TransactionId;
+                response.paymentstatus = processPaymentResponse.PaymentStatus;
 
                 return Ok(response);
             }
@@ -47,6 +49,58 @@ namespace pagSeguro.Api.Controllers
                 return UnprocessableEntity();
             }
         }
+
+        [HttpPost("boleto")]
+        [BasicAuthentication]
+        public async Task<IActionResult> Boleto(BoletoRequest request)
+        {
+            try
+            {
+                var processPaymentRequest = BuildProcessPaymentRequestBoleto(request);
+
+                var processPaymentResponse = await _paymentService.ProcessPayment(processPaymentRequest);
+
+                var response = new BoletoResponse();
+                response.succeeded = processPaymentResponse.Succeeded;
+                response.errorMessage = processPaymentResponse.ErrorMessage;
+                response.boletourl = processPaymentResponse.BoletoInfo.Url;
+                response.transactionid = processPaymentResponse.BoletoInfo.TransactionId;
+                response.paymentstatus = processPaymentResponse.PaymentStatus;
+
+                return Ok(response);
+            }
+            catch (System.Exception ex)
+            {
+                _logger.LogError($"{ex.Message}");
+                return UnprocessableEntity();
+            }
+        }
+
+        [HttpPost("status")]
+        [BasicAuthentication]
+        public async Task<IActionResult> Status(StatusRequest request)
+        {
+            try
+            {
+                var checkStatusRequest = new CheckStatusRequest
+                {
+                    TransactionId = request.transactionid
+                };
+
+                var checkStatusResponse = await _paymentService.CheckStatus(checkStatusRequest);
+
+                var response = new StatusResponse();
+                response.paymentstatus = checkStatusResponse.PaymentStatus;
+
+                return Ok(response);
+            }
+            catch (System.Exception ex)
+            {
+                _logger.LogError($"{ex.Message}");
+                return UnprocessableEntity();
+            }
+        }
+
 
         [HttpPost("getsessionid")]
         [BasicAuthentication]
@@ -76,7 +130,7 @@ namespace pagSeguro.Api.Controllers
             }
         }
 
-        private ProcessPaymentRequest BuildProcessPaymentRequest(CreditCardRequest request)
+        private ProcessPaymentRequest BuildProcessPaymentRequestCartaoCredito(CreditCardRequest request)
         {
             var processPaymentRequest = new ProcessPaymentRequest();
             processPaymentRequest.PaymentMethodId = (int)PaymentMethod.CartaoCredito;
@@ -113,16 +167,47 @@ namespace pagSeguro.Api.Controllers
                 };
             }
 
-            processPaymentRequest.CreditCard = new CreditCard();
-            processPaymentRequest.CreditCard.CreditCardToken = request.creditCardInfo.creditCardToken;
-            processPaymentRequest.CreditCard.HolderCpf = FormatCpf(request.customer.cpf);
-            processPaymentRequest.CreditCard.HolderCodeArea = GetCodeArea(request.customer.phone);
-            processPaymentRequest.CreditCard.HolderPhone = GetPhone(request.customer.phone);
-            processPaymentRequest.CreditCard.HolderBirthDate = request.customer.birthDate;
-            processPaymentRequest.CreditCard.HolderName = request.creditCardInfo.holderName;
+            processPaymentRequest.CreditCard = new CreditCard
+            {
+                CreditCardToken = request.creditCardInfo.creditCardToken,
+                HolderCpf = FormatCpf(request.customer.cpf),
+                HolderCodeArea = GetCodeArea(request.customer.phone),
+                HolderPhone = GetPhone(request.customer.phone),
+                HolderBirthDate = request.customer.birthDate,
+                HolderName = request.creditCardInfo.holderName,
 
-            processPaymentRequest.CreditCard.NumberOfPayments = request.creditCardInfo.numberOfPayments;
-            processPaymentRequest.CreditCard.InstallmentValue = request.creditCardInfo.installmentValue;
+                NumberOfPayments = request.creditCardInfo.numberOfPayments,
+                InstallmentValue = request.creditCardInfo.installmentValue
+            };
+
+            processPaymentRequest.TotalPrice = request.amount;
+            processPaymentRequest.SenderHash = request.senderHash;
+
+            return processPaymentRequest;
+        }
+
+        private ProcessPaymentRequest BuildProcessPaymentRequestBoleto(BoletoRequest request)
+        {
+            var processPaymentRequest = new ProcessPaymentRequest();
+            processPaymentRequest.PaymentMethodId = (int)PaymentMethod.Boleto;
+            processPaymentRequest.Customer = new Services.Models.Customer();
+            processPaymentRequest.Customer.Email = request.customer.email;
+            processPaymentRequest.Customer.CodeArea = GetCodeArea(request.customer.phone);
+            processPaymentRequest.Customer.Phone = GetPhone(request.customer.phone);
+            processPaymentRequest.Customer.BirthDate = request.customer.birthDate;
+            processPaymentRequest.Customer.Name = request.customer.name;
+            processPaymentRequest.Customer.CPF = FormatCpf(request.customer.cpf);
+
+            processPaymentRequest.Customer.ShippingAddress = new Services.Models.Address
+            {
+                Street = request.customer.shippingaddress.street,
+                City = request.customer.shippingaddress.city,
+                Complement = request.customer.shippingaddress.complement,
+                Neighbourhood = request.customer.shippingaddress.neighbourhood,
+                Number = request.customer.shippingaddress.number,
+                State = request.customer.shippingaddress.state,
+                ZipPostalCode = FormatPostalCode(request.customer.shippingaddress.zipPostalCode)
+            };
 
             processPaymentRequest.TotalPrice = request.amount;
             processPaymentRequest.SenderHash = request.senderHash;
