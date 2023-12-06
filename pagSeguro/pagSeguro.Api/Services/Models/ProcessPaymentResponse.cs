@@ -2,6 +2,13 @@
 {
     public class ProcessPaymentResponse
     {
+        public ProcessPaymentResponse() 
+        {
+            CreditCardInfo = new CreditCardInfo();
+            BoletoInfo = new BoletoInfo();
+            PixInfo = new PixInfo();
+        }
+
         public bool Succeeded { get; set; }
         public int PaymentStatus { get; set; }
         public CreditCardInfo CreditCardInfo { get; set; }

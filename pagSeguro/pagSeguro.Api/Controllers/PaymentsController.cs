@@ -12,17 +12,18 @@ namespace pagSeguro.Api.Controllers
     [ApiController]
     public class PaymentsController : ControllerBase
     {
-        private readonly ILogger<PaymentsController> _logger;
         private readonly IPaymentService _paymentService;
         private readonly IPagSeguroService _pagSeguroService;
+        private readonly ILogService _logService;
 
         public PaymentsController(ILogger<PaymentsController> logger, 
             IPaymentService paymentService, 
-            IPagSeguroService pagSeguroService)
+            IPagSeguroService pagSeguroService,
+            ILogService logService)
         {
-            _logger = logger;
             _paymentService = paymentService;
             _pagSeguroService = pagSeguroService;
+            _logService = logService;
         }
 
         [HttpPost("creditcard")]
@@ -45,8 +46,8 @@ namespace pagSeguro.Api.Controllers
             }
             catch (System.Exception ex)
             {
-                _logger.LogError($"{ex.Message}");
-                return UnprocessableEntity();
+                _logService.LogError(ex.ToString());
+                return UnprocessableEntity(ex.Message);
             }
         }
 
@@ -71,8 +72,8 @@ namespace pagSeguro.Api.Controllers
             }
             catch (System.Exception ex)
             {
-                _logger.LogError($"{ex.Message}");
-                return UnprocessableEntity();
+                _logService.LogError(ex.ToString());
+                return UnprocessableEntity(ex.Message);
             }
         }
 
@@ -96,8 +97,8 @@ namespace pagSeguro.Api.Controllers
             }
             catch (System.Exception ex)
             {
-                _logger.LogError($"{ex.Message}");
-                return UnprocessableEntity();
+                _logService.LogError(ex.ToString());
+                return UnprocessableEntity(ex.Message);
             }
         }
 
@@ -125,8 +126,8 @@ namespace pagSeguro.Api.Controllers
             }
             catch (System.Exception ex)
             {
-                _logger.LogError($"{ex.Message}");
-                return BadRequest(ex.Message);
+                _logService.LogError(ex.ToString());
+                return UnprocessableEntity(ex.Message);
             }
         }
 

@@ -156,10 +156,7 @@ namespace pagSeguro.Api.Services
                                         {
                                             response.Succeeded = true;
                                             response.PaymentStatus = 1;
-                                            response.CreditCardInfo = new CreditCardInfo
-                                            {
-                                                TransactionId = transactionResponse.Transaction.Code
-                                            };
+                                            response.CreditCardInfo.TransactionId = transactionResponse.Transaction.Code;
 
                                             break;
                                         }
@@ -189,20 +186,14 @@ namespace pagSeguro.Api.Services
                                             {
                                                 response.Succeeded = true;
                                                 response.PaymentStatus = 1;
-                                                response.CreditCardInfo = new CreditCardInfo
-                                                {
-                                                    TransactionId = transactionResponse.Transaction.Code
-                                                };
+                                                response.CreditCardInfo.TransactionId = transactionResponse.Transaction.Code;
                                             }
                                             else if (transactionStatus == (int)TransactionStatus.WaitingPayment ||
                                                 transactionStatus == (int)TransactionStatus.InAnalysis)
                                             {
                                                 response.Succeeded = true;
                                                 response.PaymentStatus = 2;
-                                                response.CreditCardInfo = new CreditCardInfo
-                                                {
-                                                    TransactionId = transactionResponse.Transaction.Code
-                                                };
+                                                response.CreditCardInfo.TransactionId = transactionResponse.Transaction.Code;
                                             }
                                             else if (transactionResponse.Transaction.Status == (int)TransactionStatus.Cancelled)
                                             {
@@ -282,11 +273,8 @@ namespace pagSeguro.Api.Services
                             {
                                 response.Succeeded = true;
                                 response.PaymentStatus = 2;
-                                response.BoletoInfo = new BoletoInfo
-                                {
-                                    Url = pagSeguroTransactionResponse.Transaction.PaymentLink,
-                                    TransactionId = pagSeguroTransactionResponse.Transaction.Code
-                                };
+                                response.BoletoInfo.Url = pagSeguroTransactionResponse.Transaction.PaymentLink;
+                                response.BoletoInfo.TransactionId = pagSeguroTransactionResponse.Transaction.Code;
                             }
                             else
                             {

@@ -254,7 +254,7 @@ namespace pagSeguro.Api.Integrations
                         collection.Add(new("currency", "BRL"));
                         collection.Add(new("extraAmount", "0.00"));
                         collection.Add(new("itemId1", "0001"));
-                        collection.Add(new("itemDescription1", "Fórmula Personalize"));
+                        collection.Add(new("itemDescription1", "compra feita no site"));
                         collection.Add(new("itemAmount1", request.ItemAmount1));
                         collection.Add(new("itemQuantity1", request.ItemQuantity1));
                         collection.Add(new("notificationURL", request.NotificationURL));
